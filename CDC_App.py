@@ -25,7 +25,7 @@ import random
 import pymongo
 from tkinter import *
 from tkinter import ttk
-
+import time
 
 # load
 def load():
@@ -110,13 +110,14 @@ def get_question():
 
 
 # (death type, list, answer number)
-def add_risk(n, q, x):
+def add_risk(n, q, x, risk0):
     if n == 1:  # accident
-        risk[0] += q[1][x][1]
+        risk0[0] += q[1][x][1]
     if n == 3:  # homicide
-        risk[2] += q[1][x][1]
+        risk0[2] += q[1][x][1]
     if n == 7:  # natural
-        risk[1] += q[1][x][1]
+        risk0[1] += q[1][x][1]
+    return risk0
 
 
 def query(m000, age0, risk0):
@@ -127,6 +128,8 @@ def query(m000, age0, risk0):
         print("Invalid month.")
         return
 
+    then = time.time()
+
     client = pymongo.MongoClient('localhost')
     db = client['mydatabase']
     icd10codes = db['icd10codes']
@@ -134,7 +137,9 @@ def query(m000, age0, risk0):
     riskMax = max(risk0)
     if riskMax == 0:
         # return success message
-        print("You have lived through your week long trip!")
+        print("You have lived through your week long trip with 0 risk!")
+        now = time.time()
+
         return
 
     riskIndex = risk0.index(riskMax)
@@ -144,15 +149,21 @@ def query(m000, age0, risk0):
         if not data:
             # print success
             print("You have lived through your week long trip!")
+            now = time.time()
+            print("Time to complete query: " + now-then + " seconds")
             return
         else:
             msg = icd10codes.find_one({"Code": data["ICD10"]})
             if not msg:
                 # print success
                 print("You have lived through your week long trip!")
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
             else:
                 print("You did not survive your trip. You died by:")
                 print(msg)
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
                 print("You made a lot of accidental risk decisions, try to be more calm and practical.")
     elif riskIndex == 1:
         # natural
@@ -160,33 +171,45 @@ def query(m000, age0, risk0):
         if not data:
             # print success
             print("You have lived through your week long trip!")
+            now = time.time()
+            print("Time to complete query: " + now - then + " seconds")
             return
         else:
             msg = icd10codes.find_one({"Code": data["ICD10"]})
             if not msg:
                 # print success
                 print("You have lived through your week long trip!")
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
             else:
                 print("You did not survive your trip. You died by:")
                 print(msg)
                 print("You made a lot of health risk decisions, try to consider healthier behaviors.")
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
     elif riskIndex == 2:
         # homicide
         data = monthCollection.find_one({"Age_Recode_12": age0, "Manner_Of_Death": "3"}, {"ICD10": 1})
         if not data:
             # print success
             print("You have lived through your week long trip!")
+            now = time.time()
+            print("Time to complete query: " + now - then + " seconds")
             return
         else:
             msg = icd10codes.find_one({"Code": data["ICD10"]})
             if not msg:
                 # print success
                 print("You have lived through your week long trip!")
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
             else:
                 print("You did not survive your trip. You died by:")
                 print(msg)
                 print("You made a lot of risky decisions when confronted with criminals. "
                   "\nTry to avoid confrontations and being a hero.")
+                now = time.time()
+                print("Time to complete query: " + now - then + " seconds")
 
 
 # Creates interface to display questions and answers.
@@ -208,38 +231,61 @@ def main():
 
     # age
     Label(frame1, text=questionsForAll[0][0]).grid(row=2, column=1)
-    Button(frame1, text=questionsForAll[0][1][0][0], command=set_age(questionsForAll, 0, 1, 0)).grid(row=3, column=1)
-    Button(frame1, text=questionsForAll[0][1][1][0], command=set_age(questionsForAll, 0, 1, 1)).grid(row=4, column=1)
-    Button(frame1, text=questionsForAll[0][1][2][0], command=set_age(questionsForAll, 0, 1, 2)).grid(row=5, column=1)
-    Button(frame1, text=questionsForAll[0][1][3][0], command=set_age(questionsForAll, 0, 1, 3)).grid(row=6, column=1)
-    Button(frame1, text=questionsForAll[0][1][4][0], command=set_age(questionsForAll, 0, 1, 4)).grid(row=7, column=1)
-    Button(frame1, text=questionsForAll[0][1][5][0], command=set_age(questionsForAll, 0, 1, 5)).grid(row=8, column=1)
-    Button(frame1, text=questionsForAll[0][1][6][0], command=set_age(questionsForAll, 0, 1, 6)).grid(row=9, column=1)
-    Button(frame1, text=questionsForAll[0][1][7][0], command=set_age(questionsForAll, 0, 1, 7)).grid(row=10, column=1)
-    Button(frame1, text=questionsForAll[0][1][8][0], command=set_age(questionsForAll, 0, 1, 8)).grid(row=11, column=1)
-    Button(frame1, text=questionsForAll[0][1][9][0], command=set_age(questionsForAll, 0, 1, 9)).grid(row=12, column=1)
-    Button(frame1, text=questionsForAll[0][1][10][0], command=set_age(questionsForAll, 0, 1, 10)).grid(row=13, column=1)
+    Button(frame1, text=questionsForAll[0][1][0][0], command=lambda: set_age(questionsForAll, 0, 1, 0)).grid(row=3,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][1][0], command=lambda: set_age(questionsForAll, 0, 1, 1)).grid(row=4,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][2][0], command=lambda: set_age(questionsForAll, 0, 1, 2)).grid(row=5,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][3][0], command=lambda: set_age(questionsForAll, 0, 1, 3)).grid(row=6,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][4][0], command=lambda: set_age(questionsForAll, 0, 1, 4)).grid(row=7,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][5][0], command=lambda: set_age(questionsForAll, 0, 1, 5)).grid(row=8,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][6][0], command=lambda: set_age(questionsForAll, 0, 1, 6)).grid(row=9,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][7][0], command=lambda: set_age(questionsForAll, 0, 1, 7)).grid(row=10,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][8][0], command=lambda: set_age(questionsForAll, 0, 1, 8)).grid(row=11,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][9][0], command=lambda: set_age(questionsForAll, 0, 1, 9)).grid(row=12,
+                                                                                                             column=1)
+    Button(frame1, text=questionsForAll[0][1][10][0], command=lambda: set_age(questionsForAll, 0, 1, 10)).grid(row=13,
+                                                                                                               column=1)
 
     # gender
     Label(frame2, text=questionsForAll[1][0]).grid(row=2, column=1)
-    Button(frame2, text=questionsForAll[1][1][0][0], command=set_age(questionsForAll, 1, 1, 0)).grid(row=3, column=1)
-    Button(frame2, text=questionsForAll[1][1][1][0], command=set_age(questionsForAll, 1, 1, 1)).grid(row=4, column=1)
+    Button(frame2, text=questionsForAll[1][1][0][0], command=lambda: set_age(questionsForAll, 1, 1, 0)).grid(row=3,
+                                                                                                             column=1)
+    Button(frame2, text=questionsForAll[1][1][1][0], command=lambda: set_age(questionsForAll, 1, 1, 1)).grid(row=4,
+                                                                                                             column=1)
 
     # month
     Label(frame3, text=questionsForAll[2][0]).grid(row=2, column=1)
-    Button(frame3, text=questionsForAll[2][1][0][0], command=set_month(questionsForAll, 2, 1, 0)).grid(row=3, column=1)
-    Button(frame3, text=questionsForAll[2][1][1][0], command=set_month(questionsForAll, 2, 1, 1)).grid(row=4, column=1)
-    Button(frame3, text=questionsForAll[2][1][2][0], command=set_month(questionsForAll, 2, 1, 2)).grid(row=5, column=1)
-    Button(frame3, text=questionsForAll[2][1][3][0], command=set_month(questionsForAll, 2, 1, 3)).grid(row=6, column=1)
-    Button(frame3, text=questionsForAll[2][1][4][0], command=set_month(questionsForAll, 2, 1, 4)).grid(row=7, column=1)
-    Button(frame3, text=questionsForAll[2][1][5][0], command=set_month(questionsForAll, 2, 1, 5)).grid(row=8, column=1)
-    Button(frame3, text=questionsForAll[2][1][6][0], command=set_month(questionsForAll, 2, 1, 6)).grid(row=9, column=1)
-    Button(frame3, text=questionsForAll[2][1][7][0], command=set_month(questionsForAll, 2, 1, 7)).grid(row=10, column=1)
-    Button(frame3, text=questionsForAll[2][1][8][0], command=set_month(questionsForAll, 2, 1, 8)).grid(row=11, column=1)
-    Button(frame3, text=questionsForAll[2][1][9][0], command=set_month(questionsForAll, 2, 1, 9)).grid(row=12, column=1)
-    Button(frame3, text=questionsForAll[2][1][10][0], command=set_month(questionsForAll, 2, 1, 10)).grid(row=13,
+    Button(frame3, text=questionsForAll[2][1][0][0], command=lambda: set_month(questionsForAll, 2, 1, 0)).grid(row=3,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][1][0], command=lambda: set_month(questionsForAll, 2, 1, 1)).grid(row=4,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][2][0], command=lambda: set_month(questionsForAll, 2, 1, 2)).grid(row=5,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][3][0], command=lambda: set_month(questionsForAll, 2, 1, 3)).grid(row=6,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][4][0], command=lambda: set_month(questionsForAll, 2, 1, 4)).grid(row=7,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][5][0], command=lambda: set_month(questionsForAll, 2, 1, 5)).grid(row=8,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][6][0], command=lambda: set_month(questionsForAll, 2, 1, 6)).grid(row=9,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][7][0], command=lambda: set_month(questionsForAll, 2, 1, 7)).grid(row=10,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][8][0], command=lambda: set_month(questionsForAll, 2, 1, 8)).grid(row=11,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][9][0], command=lambda: set_month(questionsForAll, 2, 1, 9)).grid(row=12,
+                                                                                                               column=1)
+    Button(frame3, text=questionsForAll[2][1][10][0], command=lambda: set_month(questionsForAll, 2, 1, 10)).grid(row=13,
                                                                                                          column=1)
-    Button(frame3, text=questionsForAll[2][1][11][0], command=set_month(questionsForAll, 2, 1, 11)).grid(row=14,
+    Button(frame3, text=questionsForAll[2][1][11][0], command=lambda: set_month(questionsForAll, 2, 1, 11)).grid(row=14,
                                                                                                          column=1)
 
     # random questions
@@ -252,83 +298,84 @@ def main():
     week[x][1] = question[2]
     x += 1
     Label(frame4, text=question[0]).grid(row=2, column=1)
-    Button(frame4, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame4, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame4, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame4, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame4, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame4, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame4, text=question[0][3][0][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame4, text=question[0][3][0][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6,
+                                                                                                           column=1)
 
     # monday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame5, text=question[0]).grid(row=2, column=1)
-    Button(frame5, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame5, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame5, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame5, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame5, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame5, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame5, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame5, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=1)
 
     # tuesday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame6, text=question[0]).grid(row=2, column=1)
-    Button(frame6, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame6, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame6, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame6, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame6, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame6, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame6, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=2)
+        Button(frame6, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=2)
 
     # wednesday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame7, text=question[0]).grid(row=2, column=1)
-    Button(frame7, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame7, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame7, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame7, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame7, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame7, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame7, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame7, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=1)
 
     # thursday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame8, text=question[0]).grid(row=2, column=1)
-    Button(frame8, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame8, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame8, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame8, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame8, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame8, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame8, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame8, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=1)
 
     # friday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame9, text=question[0]).grid(row=2, column=1)
-    Button(frame9, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame9, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame9, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame9, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame9, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame9, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame9, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame9, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=1)
 
     # saturday
     question = get_question()
     week[x][1] = question[2]
     x += 1
     Label(frame10, text=question[0]).grid(row=2, column=1)
-    Button(frame10, text=question[1][0][0], command=add_risk(question[2], question, 0)).grid(row=3, column=1)
-    Button(frame10, text=question[1][1][0], command=add_risk(question[2], question, 1)).grid(row=4, column=1)
-    Button(frame10, text=question[1][2][0], command=add_risk(question[2], question, 2)).grid(row=5, column=1)
+    Button(frame10, text=question[1][0][0], command=lambda: add_risk(question[2], question, 0)).grid(row=3, column=1)
+    Button(frame10, text=question[1][1][0], command=lambda: add_risk(question[2], question, 1)).grid(row=4, column=1)
+    Button(frame10, text=question[1][2][0], command=lambda: add_risk(question[2], question, 2)).grid(row=5, column=1)
     if len(question[0][1]) == 4:
-        Button(frame10, text=question[1][3][0], command=add_risk(question[2], question, 3)).grid(row=6, column=1)
+        Button(frame10, text=question[1][3][0], command=lambda: add_risk(question[2], question, 3)).grid(row=6, column=1)
 
     # final window
 
     Label(frame11, text="Process").grid(row=2, column=1)
-    Button(frame11, text="Process answers", command=query(month, age, risk)).grid(row=3, column=1)
-    Button(frame11, text="Quit program", command=quit).grid(row=4, column=1)
+    Button(frame11, text="Process answers", command=lambda: query(month, age, risk)).grid(row=3, column=1)
+    Button(frame11, text="Quit program", command=lambda: quit()).grid(row=4, column=1)
 
     notebook.pack()
 
